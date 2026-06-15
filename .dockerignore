@@ -1,0 +1,16 @@
+node_modules
+.git
+build
+public/build
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-journal
+.shopify
+.react-router
+dist
+coverage
+*.log
+.DS_Store
+.turbo
