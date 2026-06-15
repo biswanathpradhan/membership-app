@@ -1,0 +1,84 @@
+{% if customer %}
+  <div class="membervault-widget" id="membervault-widget">
+    <div class="membervault-widget__header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      <span>Member Benefits</span>
+    </div>
+    <div class="membervault-widget__body">
+      <p>View your membership status, loyalty points, and exclusive benefits.</p>
+      <a href="/apps/members" class="membervault-widget__btn">
+        My Membership Portal
+      </a>
+    </div>
+  </div>
+
+  <style>
+    .membervault-widget {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 16px 0;
+      font-family: inherit;
+    }
+    .membervault-widget__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .membervault-widget__body {
+      padding: 16px;
+      background: #fff;
+    }
+    .membervault-widget__body p {
+      margin: 0 0 12px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .membervault-widget__btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #6366f1;
+      color: #fff !important;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .membervault-widget__btn:hover {
+      background: #4f46e5;
+    }
+  </style>
+{% else %}
+  <div class="membervault-widget membervault-widget--guest">
+    <div class="membervault-widget__body" style="padding: 20px; text-align: center;">
+      <p style="margin: 0 0 12px; font-weight: 600;">Join Our Membership Program</p>
+      <p style="margin: 0 0 16px; color: #6b7280; font-size: 14px;">
+        Get exclusive discounts, loyalty rewards, and early access to sales.
+      </p>
+      <a href="/account/login" class="membervault-widget__btn">Sign In to View Benefits</a>
+    </div>
+  </div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Member Portal Widget",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Member Benefits"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Shopify Session Storage ───────────────────────────────────────────────
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+// ─── Shop Settings ─────────────────────────────────────────────────────────
+
+model Shop {
+  id                String   @id @default(cuid())
+  shopDomain        String   @unique
+  name              String?
+  email             String?
+  currency          String   @default("USD")
+  timezone          String   @default("UTC")
+  billingPlan       String   @default("trial")
+  billingStatus     String   @default("active")
+  trialEndsAt       DateTime?
+  onboardingComplete Boolean @default(false)
+  settings          String   @default("{}")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  membershipPlans MembershipPlan[]
+  members         Member[]
+  loyaltyPrograms LoyaltyProgram[]
+  referrals       Referral[]
+  auditLogs       AuditLog[]
+  exclusiveProducts ExclusiveProduct[]
+}
+
+// ─── Membership Plans ──────────────────────────────────────────────────────
+
+model MembershipPlan {
+  id              String   @id @default(cuid())
+  shopId          String
+  shop            Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  slug            String
+  price           Float
+  currency        String   @default("USD")
+  billingInterval String   @default("monthly")
+  trialDays       Int      @default(0)
+  discountPercent Float    @default(0)
+  freeShipping    Boolean  @default(false)
+  earlyAccess     Boolean  @default(false)
+  exclusiveAccess Boolean @default(false)
+  loyaltyMultiplier Float @default(1.0)
+  maxMembers      Int?
+  benefits        String   @default("[]")
+  shopifyProductId String?
+  shopifyVariantId String?
+  shopifySellingPlanId String?
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  color           String   @default("#6366f1")
+  icon            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  members Member[]
+
+  @@unique([shopId, slug])
+  @@index([shopId, isActive])
+}
+
+// ─── Members ─────────────────────────────────────────────────────────────────
+
+model Member {
+  id                  String    @id @default(cuid())
+  shopId              String
+  shop                Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  planId              String?
+  plan                MembershipPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+  shopifyCustomerId   String
+  email               String
+  firstName           String?
+  lastName            String?
+  status              String    @default("active")
+  joinedAt            DateTime  @default(now())
+  expiresAt           DateTime?
+  cancelledAt         DateTime?
+  pausedAt            DateTime?
+  loyaltyPoints       Int       @default(0)
+  lifetimeSpend       Float     @default(0)
+  referralCode        String?
+  referredById        String?
+  subscriptionId      String?
+  notes               String?
+  metadata            String    @default("{}")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  loyaltyTransactions LoyaltyTransaction[]
+  referralsMade       Referral[] @relation("ReferrerMember")
+  referralsReceived   Referral[] @relation("ReferredMember")
+
+  @@unique([shopId, shopifyCustomerId])
+  @@unique([shopId, referralCode])
+  @@index([shopId, status])
+  @@index([shopId, email])
+  @@index([planId])
+}
+
+// ─── Loyalty Program ─────────────────────────────────────────────────────────
+
+model LoyaltyProgram {
+  id              String   @id @default(cuid())
+  shopId          String
+  shop            Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name            String   @default("Rewards Program")
+  pointsPerDollar Float    @default(1.0)
+  signupBonus     Int      @default(100)
+  referralBonus   Int      @default(250)
+  reviewBonus     Int      @default(50)
+  birthdayBonus   Int      @default(100)
+  isActive        Boolean  @default(true)
+  tiers           String   @default("[]")
+  rewards         String   @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transactions LoyaltyTransaction[]
+
+  @@unique([shopId])
+}
+
+model LoyaltyTransaction {
+  id          String   @id @default(cuid())
+  programId   String
+  program     LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  type        String
+  points      Int
+  balance     Int
+  description String?
+  orderId     String?
+  createdAt   DateTime @default(now())
+
+  @@index([memberId])
+  @@index([programId])
+}
+
+// ─── Referral Program ────────────────────────────────────────────────────────
+
+model Referral {
+  id              String   @id @default(cuid())
+  shopId          String
+  shop            Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  referrerId      String
+  referrer        Member   @relation("ReferrerMember", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredId      String?
+  referred        Member?  @relation("ReferredMember", fields: [referredId], references: [id], onDelete: SetNull)
+  referredEmail   String?
+  status          String   @default("pending")
+  rewardPoints    Int      @default(250)
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([shopId, status])
+  @@index([referrerId])
+}
+
+// ─── Exclusive Products ──────────────────────────────────────────────────────
+
+model ExclusiveProduct {
+  id              String   @id @default(cuid())
+  shopId          String
+  shop            Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopifyProductId String
+  productTitle    String?
+  requiredPlanIds String   @default("[]")
+  minLoyaltyPoints Int     @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([shopId, shopifyProductId])
+  @@index([shopId, isActive])
+}
+
+// ─── Audit Log (Security) ────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  action    String
+  entity    String
+  entityId  String?
+  actor     String?
+  details   String   @default("{}")
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([shopId, createdAt])
+  @@index([entity, entityId])
+}
+
+// ─── Rate Limiting ───────────────────────────────────────────────────────────
+
+model RateLimitEntry {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  count     Int      @default(1)
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}

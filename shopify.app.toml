@@ -1,0 +1,72 @@
+# MemberVault Pro - Shopify App Configuration
+# Learn more: https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "MemberVault Pro"
+client_id = ""
+application_url = "https://localhost"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[access_scopes]
+scopes = "read_products,write_products,read_customers,write_customers,read_orders,write_discounts,read_discounts,write_price_rules,read_price_rules,read_content,write_content,read_themes,write_themes,read_checkouts,write_checkouts,read_shipping,write_shipping,read_fulfillments,read_inventory,read_locations,read_markets,read_metaobjects,write_metaobjects,read_metaobject_definitions,write_metaobject_definitions"
+
+[auth]
+redirect_urls = ["https://localhost/auth/callback", "https://localhost/auth/shopify/callback", "https://localhost/api/auth/callback"]
+
+[webhooks]
+api_version = "2025-10"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/scopes_update"]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = ["orders/create"]
+  uri = "/webhooks/orders/create"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/create"]
+  uri = "/webhooks/customers/create"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/update"]
+  uri = "/webhooks/customers/update"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/delete"]
+  uri = "/webhooks/customers/delete"
+
+  [[webhooks.subscriptions]]
+  topics = ["subscription_contracts/create"]
+  uri = "/webhooks/subscriptions/create"
+
+  [[webhooks.subscriptions]]
+  topics = ["subscription_contracts/update"]
+  uri = "/webhooks/subscriptions/update"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/data_request"
+  compliance_topics = ["customers/data_request"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/redact"
+  compliance_topics = ["customers/redact"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  compliance_topics = ["shop/redact"]
+
+[app_proxy]
+url = "https://localhost/proxy"
+subpath = "members"
+prefix = "apps"
+
+[pos]
+embedded = false
